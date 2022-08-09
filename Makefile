@@ -1,20 +1,15 @@
 # See LICENSE.txt for license details.
 
-CXX_FLAGS += -std=c++11 -O3 -Wall
-PAR_FLAG = -fopenmp
 
-ifneq (,$(findstring icpc,$(CXX)))
-	PAR_FLAG = -openmp
-endif
+# The build fails with -std=c++11
+# CXX_FLAGS = -std=c++11 -O3 -Wall
 
-ifneq (,$(findstring sunCC,$(CXX)))
-	CXX_FLAGS = -std=c++11 -xO3 -m64 -xtarget=native
-	PAR_FLAG = -xopenmp
-endif
+# Compile takes too long with
+# CXX_FLAGS = -O3 -Wall
 
-ifneq ($(SERIAL), 1)
-	CXX_FLAGS += $(PAR_FLAG)
-endif
+# So, give no flags
+CXX_FLAGS = -Wall
+
 
 KERNELS = bc bfs cc cc_sv pr pr_spmv sssp tc
 SUITE = $(KERNELS) converter
