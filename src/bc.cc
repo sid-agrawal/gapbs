@@ -15,6 +15,7 @@
 #include "sliding_queue.h"
 #include "timer.h"
 #include "util.h"
+#include <sys/sysctl.h>
 
 
 /*
@@ -94,6 +95,22 @@ void PBFS(const Graph &g, NodeID source, pvector<CountT> &path_counts,
 
 pvector<ScoreT> Brandes(const Graph &g, SourcePicker<Graph> &sp,
                         NodeID num_iters) {
+ int mib_soft[2], mib_major[2], softfaults, majorfaults; 
+	size_t mib_soft_len, mib_major_len, len; 
+
+	mib_soft_len = 2; 
+	mib_major_len = 2; 
+	sysctlnametomib("vm.v_softfault", mib_soft, &mib_soft_len);
+	sysctlnametomib("vm.v_majorfault", mib_major, &mib_major_len);
+
+	len = sizeof(softfaults);
+	int newp1 = 0, newp2 = 0; 
+	sysctl(mib_soft, 2, &softfaults, &len, &newp1, len);
+	sysctl(mib_major, 2, &majorfaults, &len, &newp2, len);
+
+	printf("Softfaults %d, majorfaults %d\n", softfaults, majorfaults);
+
+
   Timer t;
   t.Start();
   pvector<ScoreT> scores(g.num_nodes(), 0);
@@ -117,6 +134,20 @@ pvector<ScoreT> Brandes(const Graph &g, SourcePicker<Graph> &sp,
     PrintStep("b", t.Seconds());
     pvector<ScoreT> deltas(g.num_nodes(), 0);
     t.Start();
+
+    mib_soft_len = 2; 
+    mib_major_len = 2; 
+    sysctlnametomib("vm.v_softfault", mib_soft, &mib_soft_len);
+    sysctlnametomib("vm.v_majorfault", mib_major, &mib_major_len);
+
+    len = sizeof(softfaults);
+    int newp1 = 0, newp2 = 0; 
+    sysctl(mib_soft, 2, &softfaults, &len, &newp1, len);
+    sysctl(mib_major, 2, &majorfaults, &len, &newp2, len);
+
+    printf("Softfaults %d, majorfaults %d\n", softfaults, majorfaults);
+
+
     for (int d=depth_index.size()-2; d >= 0; d--) {
       #pragma omp parallel for schedule(dynamic, 64)
       for (auto it = depth_index[d]; it < depth_index[d+1]; it++) {
