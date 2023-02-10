@@ -1,0 +1,34 @@
+# Not sure if this is working or not.
+
+# See LICENSE.txt for license details.
+
+# This where cheribuild ouput the tools.
+MORELLO_SDK_ROOT:=~/cheri/output/morello-sdk
+
+# Morello cross-compilation definitions
+MORELLO_CXX=$(MORELLO_SDK_ROOT)/bin/clang++
+MORELLO_SYSROOT=$(MORELLO_SDK_ROOT)/sysroot-morello-purecap
+
+
+MORELLO_PURE_FLAGS=--target=aarch64-unknown-freebsd13 -march=morello+c64 -mabi=purecap --sysroot=$(MORELLO_SYSROOT) 
+MORELLO_HYBRID_FLAGS=--target=aarch64-unknown-freebsd13 -march=morello --sysroot=$(MORELLO_SYSROOT)
+
+KERNELS = bc bfs cc cc_sv pr pr_spmv sssp tc
+SUITE = $(KERNELS) converter
+
+.PHONY: all
+all: $(SUITE)
+
+% : src/%.cc src/*.h
+	$(MORELLO_CXX) $(MORELLO_PURE_FLAGS) $< -o $@
+
+# Testing
+include test/test.mk
+
+# Benchmark Automation
+include benchmark/bench.mk
+
+
+.PHONY: clean
+clean:
+	rm -f $(SUITE) test/out/*
