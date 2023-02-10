@@ -14,7 +14,6 @@
 #include "sliding_queue.h"
 #include "timer.h"
 
-#include <sys/sysctl.h>
 
 /*
 GAP Benchmark Suite
@@ -41,31 +40,8 @@ them in parent array as negative numbers. Thus the encoding of parent is:
     November 2012.
 */
 
-#if 0
-	int mib_soft[2], mib_major[2], mib_blocked[2], mib_prefetch[2], softfaults, majorfaults, blocked_faults, prefetches; 
-	size_t mib_soft_len, mib_major_len, mib_blocked_len, mib_prefetch_len, len; 
 
-	mib_soft_len = 2; 
-	mib_major_len = 2;
-	mib_blocked_len = 2;
-	mib_prefetch_len = 2;
-	
-	sysctlnametomib("vm.v_softfault", mib_soft, &mib_soft_len);
-	sysctlnametomib("vm.v_majorfault", mib_major, &mib_major_len);
-	sysctlnametomib("vm.v_blocked_softfault", mib_blocked, &mib_blocked_len);
-	sysctlnametomib("vm.v_prefetches", mib_prefetch, &mib_prefetch_len);
-	
-	len = sizeof(softfaults);
-	int newp1 = 0, newp2 = 0; 
-	sysctl(mib_soft, 2, &softfaults, &len, NULL, 0);
-	sysctl(mib_major, 2, &majorfaults, &len, NULL, 0);
-	sysctl(mib_blocked, 2, &blocked_faults, &len, NULL, 0);
-	sysctl(mib_prefetch, 2, &prefetches, &len, NULL, 0);
-
-	printf("Softfaults %d, majorfaults %d, Blocked faults %d, prefetches %d\n", softfaults, majorfaults, blocked_faults, prefetches);
-#endif
 using namespace std;
-
 
 int64_t BUStep(const Graph &g, pvector<NodeID> &parent, Bitmap &front,
                Bitmap &next) {
@@ -147,32 +123,6 @@ pvector<NodeID> DOBFS(const Graph &g, NodeID source, int alpha = 15,
                       int beta = 18) {
   PrintStep("Source", static_cast<int64_t>(source));
   Timer t;
-
-  // Start Here
-  /*************************************************************************/
-  int mib_soft[2], mib_major[2], mib_blocked[2], mib_prefetch[2], softfaults, majorfaults, blocked_faults, prefetches; 
-  size_t mib_soft_len, mib_major_len, mib_blocked_len, mib_prefetch_len, len; 
-
-  mib_soft_len = 2; 
-  mib_major_len = 2;
-  mib_blocked_len = 2;
-  mib_prefetch_len = 2;
-
-  sysctlnametomib("vm.v_softfault", mib_soft, &mib_soft_len);
-  sysctlnametomib("vm.v_majorfault", mib_major, &mib_major_len);
-  sysctlnametomib("vm.v_blocked_softfault", mib_blocked, &mib_blocked_len);
-  sysctlnametomib("vm.v_prefetches", mib_prefetch, &mib_prefetch_len);
-
-  len = sizeof(softfaults);
-  int newp1 = 0, newp2 = 0; 
-  sysctl(mib_soft, 2, &softfaults, &len, NULL, 0);
-  sysctl(mib_major, 2, &majorfaults, &len, NULL, 0);
-  sysctl(mib_blocked, 2, &blocked_faults, &len, NULL, 0);
-  sysctl(mib_prefetch, 2, &prefetches, &len, NULL, 0);
-  /*************************************************************************/
-
-
-
   t.Start();
   pvector<NodeID> parent = InitParent(g);
   t.Stop();
@@ -219,35 +169,6 @@ pvector<NodeID> DOBFS(const Graph &g, NodeID source, int alpha = 15,
   for (NodeID n = 0; n < g.num_nodes(); n++)
     if (parent[n] < -1)
       parent[n] = -1;
-
-  //end
-  /*************************************************************************/
-  int final_softfaults, final_majorfaults, final_blocked_faults, final_prefetches;
-  mib_soft_len = 2; 
-  mib_major_len = 2;
-  mib_blocked_len = 2;
-  mib_prefetch_len = 2;
-
-  sysctlnametomib("vm.v_softfault", mib_soft, &mib_soft_len);
-  sysctlnametomib("vm.v_majorfault", mib_major, &mib_major_len);
-  sysctlnametomib("vm.v_blocked_softfault", mib_blocked, &mib_blocked_len);
-  sysctlnametomib("vm.v_prefetches", mib_prefetch, &mib_prefetch_len);
-
-  len = sizeof(softfaults);
-  newp1 = 0, newp2 = 0; 
-  sysctl(mib_soft, 2, &final_softfaults, &len, NULL, 0);
-  sysctl(mib_major, 2, &final_majorfaults, &len, NULL, 0);
-  sysctl(mib_blocked, 2, &final_blocked_faults, &len, NULL, 0);
-  sysctl(mib_prefetch, 2, &final_prefetches, &len, NULL, 0);
-
-  printf("Softfaults %d, majorfaults %d, Blocked faults %d, prefetches %d\n", 
-                  final_softfaults - softfaults, 
-                  final_majorfaults - majorfaults, 
-                  final_blocked_faults - blocked_faults, 
-                  final_prefetches - prefetches);
-  /*************************************************************************/
-
-
   return parent;
 }
 
